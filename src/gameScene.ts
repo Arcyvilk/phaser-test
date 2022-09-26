@@ -16,6 +16,10 @@ export default class GameScene extends Phaser.Scene {
     super('GameScene');
   }
 
+  // -------------------------- //
+  // ------ Game's state ------ //
+  // -------------------------- //
+  
   preload() {
     this.load.image('bg', 'assets/bg.png');
     this.load.image('ground', 'assets/platform.png');
@@ -35,12 +39,16 @@ export default class GameScene extends Phaser.Scene {
 
     this.createPlatforms();
     this.createPlayer();
-    this.createAnimations();
+    this.createMovementAnimations();
   }
 
   update() {
-    this.setPlayerInput();
+    this.handlePlayerInput();
   }
+
+  // ----------------------------------- //
+  // ------ Create & load sprites ------ //
+  // ----------------------------------- //
 
   createPlatforms() {
     platformMap.map((platform: Platform) => {
@@ -53,45 +61,80 @@ export default class GameScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(false);
   }
 
-  createAnimations() {
+  // ------------------------ //
+  // ------ Animations ------ //
+  // ------------------------ //
+
+  createMovementAnimations() {
+    this.createMoveLeftAnim();
+    this.createMoveRightAnim();
+    this.createIdleAnim();
+  }
+
+  createMoveLeftAnim() {
     const configMoveLeft = {
       key: 'left',
       frames: this.anims.generateFrameNumbers('chunky', { start: 0, end: 4 }),
       frameRate: 10,
       repeat: -1
     };
+    this.anims.create(configMoveLeft);
+  }
+
+  createMoveRightAnim() {
     const configMoveRight = {
       key: 'right',
       frames: this.anims.generateFrameNumbers('chunky', { start: 5, end: 9 }),
       frameRate: 10,
       repeat: -1
     }
-    const configMoveTurn = {
-      key: 'turn',
+    this.anims.create(configMoveRight);
+  }
+  
+  createIdleAnim() {
+    const configIdle = {
+      key: 'idle',
       frames: [ { key: 'chunky', frame: 0 } ],
       frameRate: 20
     };
-
-    this.anims.create(configMoveLeft);
-    this.anims.create(configMoveRight);
-    this.anims.create(configMoveTurn);
+    this.anims.create(configIdle);
   }
 
-  setPlayerInput() {
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-Physics.VELOCITY_X);
-      this.player.anims.play('left', true);
-    }
-    else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(Physics.VELOCITY_X);
-      this.player.anims.play('right', true);
-    } 
-    else {
-      this.player.setVelocityX(0);
-      this.player.anims.play('turn'); 
-    }
+  // -------------------------------- //
+  // ------ Movement functions ------ //
+  // -------------------------------- //
+
+  handlePlayerInput() {
     if (this.cursors.up.isDown && this.player.body.touching.down) {
-      this.player.setVelocityY(-Physics.VELOCITY_Y);
+      this.jump();
     }
+    if (this.cursors.left.isDown) {
+      this.moveLeft();
+      return;
+    }
+    if (this.cursors.right.isDown) {
+      this.moveRight();
+      return;
+    } 
+    this.idle();
+  }
+
+  jump() {
+    this.player.setVelocityY(-Physics.VELOCITY_Y);
+  }
+
+  moveLeft() {
+    this.player.setVelocityX(-Physics.VELOCITY_X);
+    this.player.anims.play('left', true);
+  }
+
+  moveRight() {
+    this.player.setVelocityX(Physics.VELOCITY_X);
+    this.player.anims.play('right', true);
+  }
+
+  idle() {
+    this.player.setVelocityX(0);
+    this.player.anims.play('idle'); 
   }
 }
